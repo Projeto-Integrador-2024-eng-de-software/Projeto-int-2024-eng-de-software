@@ -1,6 +1,4 @@
 import tabulate as tabulate 
-import pandas as pd 
-from colorama import init, Fore, Back, Style
 import oracledb
 import getpass
 import numpy as np
