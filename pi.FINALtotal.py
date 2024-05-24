@@ -211,15 +211,12 @@ while(A!=5):
                 print("ATENÇÃO!! VOCÊ NÃO PODE ULTRAPASSAR O VALOR DE 100% NA SOMA")
                 break
                 
-
-
             elif soma <= 100:
                 Pv = Ca / (1 - (soma / 100))
 
             if(Ml>100):
                 soma=soma*-1
 
-            
             if (Pv<0):
                 Pv=Pv*(-1)
                 print(f"{Pv}")
@@ -247,10 +244,6 @@ while(A!=5):
             elif Ml < 0:  
                 nomeTab = "Prejuizo"
             lucro = Ml
-            '''tabela1 = {
-                "tabela2": ["Código", "Nome", "Descrição", "Custo", "Custo Fixo", "Comissão Vendas", "Imposto", "Rentabilidade"],
-                "dados_tabela": [[row[0], row[1], mensagem_descriptografada, Ca, row[4], row[5], row[6], row[7]]],
-                }'''
 
             tabela2 = {
                 "Descrição": ["A-Preço de venda", "B-Custo de aquisação(fornecedor)", "C-Receita Bruta(A-B)","D-Custo fixo/administrativo","E-Comissão de vendas", "F-Impostos", "G-Rentabilidade", "F-Outros Custos"],
