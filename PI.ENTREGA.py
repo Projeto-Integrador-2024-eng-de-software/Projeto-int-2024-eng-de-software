@@ -23,13 +23,13 @@ def criptografar(mensagem):
     if len(mensagem) % 2 != 0:
         mensagem += ' '
             
-        mensagem_criptografada = ""
-        for i in range(0, len(mensagem), 2):
-            par = [numLetra(mensagem[i]), numLetra(mensagem[i+1])]
-            par_criptografado = np.dot(matriz_chave, par) % mod
-            mensagem_criptografada += ''.join(letra(x) for x in par_criptografado)
+    mensagem_criptografada = ""
+    for i in range(0, len(mensagem), 2):
+        par = [numLetra(mensagem[i]), numLetra(mensagem[i+1])]
+        par_criptografado = np.dot(matriz_chave, par) % mod
+        mensagem_criptografada += ''.join(letra(x) for x in par_criptografado)
             
-        return mensagem_criptografada
+    return mensagem_criptografada
 
  # função para descriptografar uma mensagem
 def descriptografar(mensagem):
