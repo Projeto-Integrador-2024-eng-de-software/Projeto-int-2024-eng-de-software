@@ -325,7 +325,7 @@ while(A!=5):
             Cv = float(input("Informe o quanto será a  nova comissão de vendas: "))
             Iv = float(input("Informe o novo imposto: "))
             connection.commit()
-
+        connection.commit()
         up=str(input("Deseja atualizar a margem de lucro?(S/N): "))
         up=up.lower()
         if(up=='s'):
