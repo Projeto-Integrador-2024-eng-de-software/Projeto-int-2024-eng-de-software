@@ -1,4 +1,3 @@
-
 import tabulate as tabulate 
 import oracledb
 import getpass
@@ -23,13 +22,13 @@ def criptografar(mensagem):
     if len(mensagem) % 2 != 0:
         mensagem += ' '
             
-    mensagem_criptografada = ""
-    for i in range(0, len(mensagem), 2):
-        par = [numLetra(mensagem[i]), numLetra(mensagem[i+1])]
-        par_criptografado = np.dot(matriz_chave, par) % mod
-        mensagem_criptografada += ''.join(letra(x) for x in par_criptografado)
+        mensagem_criptografada = ""
+        for i in range(0, len(mensagem), 2):
+            par = [numLetra(mensagem[i]), numLetra(mensagem[i+1])]
+            par_criptografado = np.dot(matriz_chave, par) % mod
+            mensagem_criptografada += ''.join(letra(x) for x in par_criptografado)
             
-    return mensagem_criptografada
+        return mensagem_criptografada
 
  # função para descriptografar uma mensagem
 def descriptografar(mensagem):
@@ -40,7 +39,19 @@ def descriptografar(mensagem):
         mensagem_descriptografada += ''.join(letra(x) for x in par_descriptografado)
             
     return mensagem_descriptografada  
-    
+
+# Matriz chave
+matriz_chave = np.array([[4, 3], [1, 2]])
+
+# modulo 27 alfabeto (A-Z + espaço)
+mod = 27
+
+# inverso da matriz chave no modulo 27
+det = 5
+det_inv = 11
+pmodulo = (det_inv * (det * np.linalg.inv(matriz_chave)).astype(int) % mod)
+
+
 while(A!=5):
     A=int(input("Digite 1 para inserir, 2 para listar, 3 para atualizar, 4 para deletar ou 5 para sair: "))
     #conexão com o oracle
@@ -62,11 +73,10 @@ while(A!=5):
         Ml = float(input("Informe a rentabilidade: "))
 
         #calculo do preço de venda  
-        soma=Cf+Cv+Iv+Ml
-
-        while(soma>=100):
-            print(f"Soma do custo fixo, comissão, imposto e rentabilidade não pode ser maior que 100%")
-            print(f"Recomeçe a inserção das informações para inserção")
+        soma = Cf + Cv + Iv
+        while(soma > 100):
+            print(f"Soma dos custos não pode ser mais que 100%")
+            print(f"Recomece a inserção das informações para inserção")
             Cp = int(input("Informe o código do produto: "))
             Np = str(input("Informe o nome do produto: "))
             Dp = str(input("Informe a descrição do produto: "))
@@ -75,10 +85,20 @@ while(A!=5):
             Cv = float(input("Informe o quanto será a comissão de vendas: "))
             Iv = float(input("Informe os impostos: "))
             Ml = float(input("Informe a rentabilidade: "))
-            soma=Cf+Cv+Iv+Ml
 
-        Pv = Ca / (1 - (soma / 100))
-        Rb = Pv - Ca
+        if soma != 100:
+            Pv = Ca / (1 - ((soma + Ml) / 100))
+        else:
+            Pv = Ca / 1
+
+        if(Ml > 100):
+            soma = soma * -1
+
+        if (Pv < 0):
+            Pv = Pv * (-1)
+            print(f"{Pv}")
+            Rb = Pv - Ca
+
         custoAq = Ca
         pca = Ca / Pv * 100
         receitaBruta = Pv - Ca
@@ -120,18 +140,6 @@ while(A!=5):
         print(tabulate.tabulate(tabLuc, headers='keys', tablefmt="fancy_grid"))
         
         # criptografia da descrição
-        # matriz chave
-        matriz_chave = np.array([[4, 3], [1, 2]])
-        matriz_chave_inv = np.linalg.inv(matriz_chave)
-
-        # modulo 27 alfabeto (A-Z + espaço)
-        mod = 27
-
-        # inverso da matriz chave no modulo 27
-        det = 5
-        det_inv = 11
-        pmodulo = (det_inv * (det * np.linalg.inv(matriz_chave)).astype(int) % mod)
-
         mensagem = Dp
         mensagem_criptografada = criptografar(mensagem)
 
@@ -180,9 +188,21 @@ while(A!=5):
             Ml = row[7]
             soma=Cf+Cv+Iv+Ml
 
-            Pv = Ca / (1 - (soma / 100))
+            if(soma>100):
+                print("ATENÇÃO!! VOCÊ NÃO PODE ULTRAPASSAR O VALOR DE 100% NA SOMA")
+                break
 
-            Rb = Pv - Ca
+            elif soma <= 100:
+                Pv = Ca / (1 - (soma / 100))
+
+            if(Ml>100):
+                soma=soma*-1
+
+            if (Pv<0):
+                Pv=Pv*(-1)
+                print(f"{Pv}")
+                Rb = Pv - Ca
+
             custoAq = Ca
             pca=Ca/Pv*100
             receitaBruta = Pv-Ca
@@ -225,6 +245,24 @@ while(A!=5):
     #atualização de produtos
     elif(A==3):
         cursor = connection.cursor()
+        cursor.execute("SELECT * FROM PRODUTOS")
+        rows = cursor.fetchall()
+
+        produtos = []
+        for row in rows:
+            cod_prod = row[0]
+            nome_prod = row[1]
+            desc_prod_crip = row[2]
+            custo_prod = row[3]
+            custo_fixo = row[4]
+            comissao_vendas = row[5]
+            imposto = row[6]
+            margem_lucro = row[7]
+
+            desc_prod = descriptografar(desc_prod_crip)
+            produtos.append([cod_prod, nome_prod, desc_prod, custo_prod, custo_fixo, comissao_vendas, imposto, margem_lucro])
+        print(tabulate.tabulate(produtos, headers=["Código", "Nome", "Descrição", "Custo", "Custo Fixo", "Comissão Vendas", "Imposto", "Margem Lucro"], tablefmt='fancy_grid'))
+            
         Cpa=int(input("Digite o código do produto que deseja atualizar:"))
         cursor = connection.cursor()
         select = "SELECT * FROM PRODUTOS WHERE cod_prod = :cod_prod"
@@ -234,7 +272,7 @@ while(A!=5):
         Cv = row[5]
         Iv = row[6]
         if row:
-            print("Dados do produto:", row)
+            print("Atualização:")
         else:
             print("Nenhum produto encontrado com o código especificado.")
         
@@ -250,19 +288,7 @@ while(A!=5):
         up=up.lower()
         if(up=='s'):
             Dp=str(input("Digite a nova descrição do produto:"))
-            # criptografia da descrição
-            # matriz chave
-            matriz_chave = np.array([[4, 3], [1, 2]])
-            matriz_chave_inv = np.linalg.inv(matriz_chave)
-
-            # modulo 27 alfabeto (A-Z + espaço)
-            mod = 27
-
-             # inverso da matriz chave no modulo 27
-            det = 5
-            det_inv = 11
-            pmodulo = (det_inv * (det * np.linalg.inv(matriz_chave)).astype(int) % mod)
-
+            # criptografia da descrição update
             mensagem = Dp
             mensagem_criptografada = criptografar(mensagem)
             lista=[(mensagem_criptografada,Cpa)]
@@ -297,28 +323,21 @@ while(A!=5):
             Iv=float(input("Digite o novo imposto do produto:"))
             lista=[(Iv,Cpa)]
             cursor.executemany("""UPDATE PRODUTOS set imposto= :1 WHERE cod_prod= :2""",lista)
+        soma = Cf + Cv + Iv
+        while(soma > 100):
+            print(f"Soma dos custos não pode ser mais que 100%")
+            Cf = float(input("Informe o novo custo fixo: "))
+            Cv = float(input("Informe o quanto será a  nova comissão de vendas: "))
+            Iv = float(input("Informe o novo imposto: "))
+            connection.commit()
+
         up=str(input("Deseja atualizar a margem de lucro?(S/N): "))
         up=up.lower()
         if(up=='s'):
             Ml=float(input("Digite a nova margem de lucro do produto:"))
             lista=[(Ml,Cpa)]
             cursor.executemany("""UPDATE PRODUTOS set margem_lucro= :1 WHERE cod_prod= :2""",lista)
-        while(Cf + Cv + Iv + Ml >= 100):
-            print(f"Soma do custo fixo, comissão, imposto e rentabilidade não pode ser maior que 100%")
-            Cf = float(input("Informe o novo custo fixo: "))
-            lista=[(Cf,Cpa)]
-            cursor.executemany("""UPDATE PRODUTOS set custo_fixo= :1 WHERE cod_prod= :2""",lista)
-            Cv = float(input("Informe o quanto será a  nova comissão de vendas: "))
-            lista=[(Cv,Cpa)]
-            cursor.executemany("""UPDATE PRODUTOS set comissao_vendas= :1 WHERE cod_prod= :2""",lista)
-            Iv = float(input("Informe o novo imposto: "))
-            lista=[(Iv,Cpa)]
-            cursor.executemany("""UPDATE PRODUTOS set imposto= :1 WHERE cod_prod= :2""",lista)
-            Ml = float(input("Digite a nova margem de lucro do produto:"))
-            lista=[(Ml,Cpa)]
-            cursor.executemany("""UPDATE PRODUTOS set margem_lucro= :1 WHERE cod_prod= :2""",lista)
-        connection.commit()
-        
+            connection.commit()
 
 
         cursor.close()
@@ -330,8 +349,24 @@ while(A!=5):
         cursor = connection.cursor()
         cursor.execute("select * from PRODUTOS")
         rows = cursor.fetchall()
+        cursor.execute("SELECT * FROM PRODUTOS")
+        rows = cursor.fetchall()
+
+        produtos = []
         for row in rows:
-            print(row)
+            cod_prod = row[0]
+            nome_prod = row[1]
+            desc_prod_crip = row[2]
+            custo_prod = row[3]
+            custo_fixo = row[4]
+            comissao_vendas = row[5]
+            imposto = row[6]
+            margem_lucro = row[7]
+
+            desc_prod = descriptografar(desc_prod_crip)
+            produtos.append([cod_prod, nome_prod, desc_prod, custo_prod, custo_fixo, comissao_vendas, imposto, margem_lucro])
+        print(tabulate.tabulate(produtos, headers=["Código", "Nome", "Descrição", "Custo", "Custo Fixo", "Comissão Vendas", "Imposto", "Margem Lucro"], tablefmt='fancy_grid'))
+            
         Cpd=int(input("Digite o código do produto que deseja deletar:"))
         D=str(input("Deseja mesmo deletar o produto(S/N)? "))
         D=D.lower()
