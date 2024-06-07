@@ -50,8 +50,6 @@ mod = 27
 det = 5
 det_inv = 11
 pmodulo = (det_inv * (det * np.linalg.inv(matriz_chave)).astype(int) % mod)
-
-
 while(A!=5):
     A=int(input("Digite 1 para inserir, 2 para listar, 3 para atualizar, 4 para deletar ou 5 para sair: "))
     #conexão com o oracle
@@ -150,18 +148,6 @@ while(A!=5):
 
     #listagem de produto
     elif (A == 2):
-        # Matriz chave
-        matriz_chave = np.array([[4, 3], [1, 2]])
-
-        # modulo 27 alfabeto (A-Z + espaço)
-        mod = 27
-
-        # inverso da matriz chave no modulo 27
-        det = 5
-        det_inv = 11
-        pmodulo = (det_inv * (det * np.linalg.inv(matriz_chave)).astype(int) % mod)
-
-
         cursor.execute("SELECT * FROM PRODUTOS")
         rows = cursor.fetchall()
 
